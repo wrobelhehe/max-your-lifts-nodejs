@@ -25,3 +25,15 @@ create table exercise(
     status varchar(20),
     primary key(id)
 );
+
+create table plan(
+    id int NOT NULL AUTO_INCREMENT,
+    uuid varchar(200) NOT NULL,
+    name varchar(255) NOT NULL,
+    squat double NOT NULL,
+    benchpress double NOT NULL,
+    deadlift double NOT NULL,
+    exerciseInfo JSON DEFAULT NULL,
+    primary key(id)
+
+);

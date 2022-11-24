@@ -1,0 +1,45 @@
+<html>
+  <head>
+    <style>
+      table {
+        font-family: Arial, Helvetica, sans-serif;
+        border-collapse: collapse;
+        width: 100%;
+      }
+      td,
+      th {
+        border: 1px solid #ddd;
+        text-align: left;
+        padding: 8px;
+      }
+    </style>
+  </head>
+  <body>
+    <h3 style="text-align: center">Powerlifting Plan Generator</h3>
+    <table>
+      <tr>
+        <th>Name: <%= name %></th>
+        <th>Squat: <%= squat %></th>
+
+        <th>Benchpress: <%= benchpress %></th>
+        <th>Deadlift: <%= deadlift %></th>
+      </tr>
+    </table>
+    <h3>Monday</h3>
+    <table>
+      <tr>
+        <th>Name</th>
+        <th>Description</th>
+        <th>Video</th>
+      </tr>
+      <% if(exerciseInfo.length > 0) { %> <% exerciseInfo.forEach(exercise => {
+      %>
+      <tr>
+        <td><%= exercise.name %></td>
+        <td><%= exercise.description %></td>
+        <td><%= exercise.videoUrl %></td>
+      </tr>
+      <%});%> <%}%>
+    </table>
+  </body>
+</html>
