@@ -1,15 +1,16 @@
 const express = require("express");
 const connection = require("../connection");
 const router = express.Router();
-
+const bcrypt = require('bcryptjs')
 const jwt = require("jsonwebtoken");
 const nodemailer = require("nodemailer");
 require("dotenv").config();
 var auth = require("../services/authentication");
 var checkRole = require("../services/checkRole");
 
-router.post("/signup", (req, res) => {
+router.post("/signup", async (req, res) => {
   let user = req.body;
+  const hashPassword = await bcrypt.hash(user.password, 13)
   query = "select email,password,role from user where email=?";
   connection.query(query, [user.email], (err, result) => {
     if (!err) {
@@ -19,7 +20,7 @@ router.post("/signup", (req, res) => {
 
         connection.query(
           query,
-          [user.name, user.email, user.password],
+          [user.name, user.email, hashPassword],
           (err, results) => {
             if (!err) {
               return res
@@ -39,21 +40,24 @@ router.post("/signup", (req, res) => {
   });
 });
 
-router.post("/login", (req, res) => {
+router.post("/login", async (req, res) => {
   const user = req.body;
   query = "select email,password,role from user where email=?";
-  connection.query(query, [user.email], (err, results) => {
+  connection.query(query, [user.email], async (err, results) => {
+
+    const validPassword = await bcrypt.compare(user.password, results[0]?.password)
+    console.log(validPassword)
     if (!err) {
-      if (results.length <= 0 || results[0].password !=user.password) {
+      if (results.length <= 0 || !validPassword) {
         return res
           .status(401)
           .json({ message: "Incorrect username or password" });
-      } else if (results[0].password == user.password) {
+      } else if (validPassword) {
         const response = { email: results[0].email, role: results[0].role };
-        const accessToken = jwt.sign(response, process.env.ACCESS_TOKEN, {
-          expiresIn: "8h",
-        });
-        res.status(200).json({ token: accessToken });
+
+        const accessToken = generateAccessToken(response)
+        const refreshToken = jwt.sign(response, process.env.REFRESH_TOKEN)
+        res.status(200).json({ accessToken, refreshToken });
       } else {
         return res
           .status(400)
@@ -63,7 +67,24 @@ router.post("/login", (req, res) => {
       return res.status(500).json(err);
     }
   });
+
+  function generateAccessToken(response) {
+
+    return jwt.sign(response, process.env.ACCESS_TOKEN, { expiresIn: "1h" })
+  }
 });
+
+
+router.post("/token", (req, res) => {
+  const refreshToken = req.body.token
+  if (refreshToken == null) return res.sendStatus(401).json({ message: "User not authenticated" })
+
+  jwt.verify(refreshToken, process.env.REFRESH_TOKEN, (err, user) => {
+    if (err) return res.sendStatus(403)
+    const accessToken = generateAccessToken({ email: user.email, role: user.role })
+    res.sendStatus(201).json({ accessToken: accessToken })
+  })
+})
 
 var transporter = nodemailer.createTransport({
   service: "gmail",
@@ -127,20 +148,26 @@ router.get("/checkToken", auth.authenticateToken, (req, res) => {
   return res.status(200).json({ message: true });
 });
 
-router.post("/changePassword", auth.authenticateToken, (req, res) => {
+router.post("/changePassword", auth.authenticateToken, async (req, res) => {
+
   const user = req.body;
   const email = res.locals.email;
-  var query = "select *from user where email=? and password=?";
-  connection.query(query, [email, user.oldPassword], (err, results) => {
+
+  const newHashPassword = await bcrypt.hash(user.newPassword, 13)
+
+  var query = "select *from user where email=?";
+  connection.query(query, [email], (err, results) => {
+    const isOldPasswordCorrect = bcrypt.compareSync(user.oldPassword, results[0]?.password)
     if (!err) {
       if (results.length <= 0) {
         return res.status(400).json({ message: "Incorrect old password" });
-      } else if (results[0].password == user.oldPassword) {
+      } else if (isOldPasswordCorrect) {
         query = "update user set password=? where email=?";
-        connection.query(query, [user.newPassword, email], (err, results) => {
+        connection.query(query, [newHashPassword, email], (err, results) => {
           if (!err) {
             return res.status(200).json({ message: "Password updated" });
           } else {
+
             return res.status(500).json(err);
           }
         });
