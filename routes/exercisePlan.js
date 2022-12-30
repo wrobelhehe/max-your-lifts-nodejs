@@ -16,7 +16,8 @@ router.post("/generatePlan", auth.authenticateToken, (req, res) => {
   INNER JOIN workout_exercises we ON w.id = we.workout_id
   INNER JOIN exercises e ON we.exercise_id = e.id
   WHERE p.user_id = ? AND p.id = ?`;
-  connection.query(sql, [req.body.userId, req.body.planId], (error, rows) => {
+  const userId = res.locals.userId;
+  connection.query(sql, [userId, req.body.planId], (error, rows) => {
     if (error) {
       console.error(error);
       res.status(500).json({ message: "Internal server error" });
@@ -64,7 +65,9 @@ router.post("/generatePlan", auth.authenticateToken, (req, res) => {
 
 
 router.post("/addPlan", auth.authenticateToken, (req, res) => {
-  const { planName, planDescription, workouts, userId, sex, age, equipment, weight, squat, bench, deadlift, tested } = req.body;
+  const { planName, planDescription, workouts, sex, age, equipment, weight, squat, bench, deadlift, tested } = req.body;
+  const userId = res.locals.userId
+  console.log(userId)
   connection.beginTransaction(error => {
     if (error) {
       console.error(error);

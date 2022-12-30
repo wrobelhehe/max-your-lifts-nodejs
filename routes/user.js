@@ -88,7 +88,7 @@ router.post("/login", async (req, res) => {
             const accessToken = jwt.sign(
               { userId: userId, role, email: email },
               process.env.ACCESS_TOKEN,
-              { expiresIn: "10h" }
+              { expiresIn: "10s" }
             );
             const refreshTokenQuery = 'INSERT INTO refresh_tokens (token, user_id) VALUES (?, ?)';
             connection.query(refreshTokenQuery, [refreshToken, userId], (err, results) => {

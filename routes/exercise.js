@@ -91,7 +91,7 @@ router.get("/getById/:id", auth.authenticateToken, (req, res, next) => {
 
 
 
-router.patch("/update", auth.authenticateToken, (req, res, next) => {
+router.patch("/update", auth.authenticateToken, checkRole.checkRole, (req, res, next) => {
   const exerciseId = req.body.id;
   const exercise = req.body;
   const category_id = exercise.category_id;
