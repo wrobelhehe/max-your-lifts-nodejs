@@ -36,11 +36,11 @@ router.post('/worstLift', (req, res) => {
         const deadliftDiff = Math.abs(deadlift / deadlift_avg);
         let worstLift;
         if (benchDiff < squatDiff && benchDiff < deadliftDiff) {
-            worstLift = 'bench';
+            worstLift = 2;
         } else if (squatDiff < benchDiff && squatDiff < deadliftDiff) {
-            worstLift = 'squat';
+            worstLift = 1;
         } else {
-            worstLift = 'deadlift';
+            worstLift = 3;
         }
         res.json({ worstLift });
     });

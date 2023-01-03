@@ -64,104 +64,229 @@ router.post("/generatePlan", auth.authenticateToken, (req, res) => {
 
 
 
-router.post("/addPlan", auth.authenticateToken, (req, res) => {
-  const { planName, planDescription, workouts, sex, age, equipment, weight, squat, bench, deadlift, tested } = req.body;
-  const userId = res.locals.userId
-  console.log(userId)
-  connection.beginTransaction(error => {
-    if (error) {
-      console.error(error);
-      res.status(500).json({ message: "Internal server error" });
-      return;
+  // router.post("/addPlan", auth.authenticateToken, (req, res) => {
+  //   const { planName, planDescription, workouts, sex, age, equipment, weight, squat, bench, deadlift, tested } = req.body;
+  //   const userId = res.locals.userId
+  //   console.log(userId)
+  //   connection.beginTransaction(error => {
+  //     if (error) {
+  //       console.error(error);
+  //       res.status(500).json({ message: "Internal server error" });
+  //       return;
+  //     }
+  //     connection.query(
+  //       "INSERT INTO plans (name, description, user_id) VALUES (?, ?, ?)",
+  //       [planName, planDescription, userId],
+  //       (error, result) => {
+  //         if (error) {
+  //           console.error(error);
+  //           connection.rollback(() => {
+  //             res.status(500).json({ message: "Internal server error" });
+  //           });
+  //           return;
+  //         }
+  //         const planId = result.insertId;
+  //         connection.query(
+  //           "INSERT INTO plan_info (plan_id, sex, age, equipment, weight, squat, bench, deadlift, tested) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
+  //           [planId, sex, age, equipment, weight, squat, bench, deadlift, tested],
+  //           (error, result) => {
+  //             if (error) {
+  //               console.error(error);
+  //               connection.rollback(() => {
+  //                 res.status(500).json({ message: "Internal server error" });
+  //               });
+  //               return;
+  //             }
+  //             const queries = workouts.map(workout =>
+  //               new Promise((resolve, reject) => {
+  //                 connection.query(
+  //                   "INSERT INTO workouts (plan_id, name, description) VALUES (?, ?, ?)",
+  //                   [planId, workout.name, workout.description],
+  //                   (error, result) => {
+  //                     if (error) {
+  //                       console.error(error);
+  //                       reject();
+  //                       return;
+  //                     }
+  //                     const workoutId = result.insertId;
+  //                     const exerciseQueries = workout.exerciseIds.map(exerciseId =>
+  //                       new Promise(
+  //                         (resolve, reject) => {
+  //                           connection.query(
+  //                             "INSERT INTO workout_exercises (workout_id, exercise_id) VALUES (?, ?)",
+  //                             [workoutId, exerciseId],
+  //                             error => {
+  //                               if (error) {
+  //                                 console.error(error);
+  //                                 reject();
+  //                                 return;
+  //                               }
+  //                               resolve();
+  //                             }
+  //                           );
+  //                         }
+  //                       )
+  //                     );
+  //                     Promise.all(exerciseQueries)
+  //                       .then(() => {
+  //                         resolve();
+  //                       })
+  //                       .catch(() => {
+  //                         reject();
+  //                       });
+  //                   }
+  //                 );
+  //               })
+  //             );
+  //             Promise.all(queries)
+  //               .then(() => {
+  //                 connection.commit(error => {
+  //                   if (error) {
+  //                     console.error(error);
+  //                     connection.rollback(() => {
+  //                       res.status(500).json({ message: "Internal server error" });
+  //                     });
+  //                     return;
+  //                   }
+  //                   res.json({ message: "Plan added successfully" });
+  //                 });
+  //               })
+  //               .catch(() => {
+  //                 connection.rollback(() => {
+  //                   res.status(500).json({ message: "Internal server error" });
+  //                 });
+  //               });
+  //           }
+  //         );
+  //       }
+  //     );
+  //   });
+  // });
+
+  router.post("/addPlan", auth.authenticateToken, (req, res) => {
+    const { planName, planDescription, numWorkouts, sex, age, equipment, weight, squat, bench, deadlift, tested, worstLift } = req.body;
+    const userId = res.locals.userId;
+    console.log(userId);
+  
+    // Generate workouts based on number of workouts and worst lift specified by user
+    const workouts = [];
+    for (let i = 0; i < numWorkouts; i++) {
+      let workoutExerciseIds = [];
+      // Add exercises from all categories
+      workoutExerciseIds = workoutExerciseIds.concat(getExerciseIdsByCategory('squat'));
+      workoutExerciseIds = workoutExerciseIds.concat(getExerciseIdsByCategory('benchpress'));
+      workoutExerciseIds = workoutExerciseIds.concat(getExerciseIdsByCategory('deadlift'));
+      workoutExerciseIds = workoutExerciseIds.concat(getExerciseIdsByCategory('row'));
+      // Add additional exercise from worst lift category if specified
+      if (worstLift) {
+        workoutExerciseIds = workoutExerciseIds.concat(getExerciseIdsByCategory(worstLift));
+      }
+      workouts.push({
+        name: `Workout ${i+1}`,
+        description: '',
+        exerciseIds: workoutExerciseIds
+      });
     }
-    connection.query(
-      "INSERT INTO plans (name, description, user_id) VALUES (?, ?, ?)",
-      [planName, planDescription, userId],
-      (error, result) => {
-        if (error) {
-          console.error(error);
-          connection.rollback(() => {
-            res.status(500).json({ message: "Internal server error" });
-          });
-          return;
-        }
-        const planId = result.insertId;
-        connection.query(
-          "INSERT INTO plan_info (plan_id, sex, age, equipment, weight, squat, bench, deadlift, tested) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
-          [planId, sex, age, equipment, weight, squat, bench, deadlift, tested],
-          (error, result) => {
-            if (error) {
-              console.error(error);
-              connection.rollback(() => {
-                res.status(500).json({ message: "Internal server error" });
-              });
-              return;
-            }
-            const queries = workouts.map(workout =>
-              new Promise((resolve, reject) => {
-                connection.query(
-                  "INSERT INTO workouts (plan_id, name, description) VALUES (?, ?, ?)",
-                  [planId, workout.name, workout.description],
-                  (error, result) => {
-                    if (error) {
-                      console.error(error);
-                      reject();
-                      return;
-                    }
-                    const workoutId = result.insertId;
-                    const exerciseQueries = workout.exerciseIds.map(exerciseId =>
-                      new Promise(
-                        (resolve, reject) => {
-                          connection.query(
-                            "INSERT INTO workout_exercises (workout_id, exercise_id) VALUES (?, ?)",
-                            [workoutId, exerciseId],
-                            error => {
-                              if (error) {
-                                console.error(error);
-                                reject();
-                                return;
-                              }
-                              resolve();
-                            }
-                          );
-                        }
-                      )
-                    );
-                    Promise.all(exerciseQueries)
-                      .then(() => {
-                        resolve();
-                      })
-                      .catch(() => {
-                        reject();
-                      });
-                  }
-                );
-              })
-            );
-            Promise.all(queries)
-              .then(() => {
-                connection.commit(error => {
-                  if (error) {
-                    console.error(error);
-                    connection.rollback(() => {
-                      res.status(500).json({ message: "Internal server error" });
-                    });
-                    return;
-                  }
-                  res.json({ message: "Plan added successfully" });
-                });
-              })
-              .catch(() => {
+  
+    connection.beginTransaction(error => {
+      if (error) {
+        console.error(error);
+        res.status(500).json({ message: "Internal server error" });
+        return;
+      }
+      connection.query(
+        "INSERT INTO plans (name, description, user_id) VALUES (?, ?, ?)",
+        [planName, planDescription, userId],
+        (error, result) => {
+          if (error) {
+            console.error(error);
+            connection.rollback(() => {
+              res.status(500).json({ message: "Internal server error" });
+            });
+            return;
+          }
+          const planId = result.insertId;
+          connection.query(
+            "INSERT INTO plan_info (plan_id, sex, age, equipment, weight, squat, bench, deadlift, tested) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
+            [planId, sex, age, equipment, weight, squat, bench, deadlift, tested],
+            (error, result) => {
+              if (error) {
+                console.error(error);
                 connection.rollback(() => {
                   res.status(500).json({ message: "Internal server error" });
                 });
-              });
-          }
-        );
-      }
-    );
+                return;
+              }
+              const queries = workouts.map(workout =>
+                new Promise((resolve, reject) => {
+                  connection.query(
+                    "INSERT INTO workouts (plan_id, name, description) VALUES (?, ?, ?)",
+                    [planId, workout.name, workout.description],
+                    (error, result) => {
+                      if (error) {
+                        console.error(error);
+                        reject();
+                        return;
+                      }
+                      const workoutId = result.insertId;
+                      const exerciseQueries = workout.exerciseIds.map(exerciseId =>
+                        new Promise(
+                          (resolve, reject) => {
+                            connection.query(
+                              "INSERT INTO workout_exercises (workout_id, exercise_id) VALUES (?, ?)",
+                              [workoutId, exerciseId],
+                              error => {
+                                if (error) {
+                                  console.error(error);
+                                  reject();
+                                  return;
+                                }
+                                resolve();
+                              }
+                            );
+                          }
+                        )
+                      );
+                      Promise.all(exerciseQueries)
+                        .then(() => {
+                          resolve();
+                        })
+                        .catch(() => {
+                          reject();
+                        });
+                    }
+                  );
+                })
+              );
+              Promise.all(queries)
+                .then(() => {
+                  connection.commit(error => {
+                    if (error) {
+                      console.error(error);
+                      connection.rollback(() => {
+                        res.status(500).json({ message: "Internal server error" });
+                      });
+                      return;
+                    }
+                    res.json({ message: "Plan added successfully" });
+                  });
+                })
+                .catch(() => {
+                  connection.rollback(() => {
+                    res.status(500).json({ message: "Internal server error" });
+                  });
+                });
+            }
+          );
+        }
+      );
+    });
   });
-});
+  
+  
+  
+
+
 
 
 router.delete("/deletePlan/:id", auth.authenticateToken, (req, res) => {
