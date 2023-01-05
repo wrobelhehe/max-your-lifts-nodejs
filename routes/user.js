@@ -83,7 +83,7 @@ router.post("/login", async (req, res) => {
             const refreshToken = jwt.sign(
               { userId: userId, role, email: email },
               process.env.REFRESH_TOKEN,
-              { expiresIn: "7d" }
+              { expiresIn: "14d" }
             );
             const accessToken = jwt.sign(
               { userId: userId, role, email: email },

@@ -36,9 +36,9 @@ router.post('/worstLift', (req, res) => {
         const deadliftDiff = Math.abs(deadlift / deadlift_avg);
         let worstLift;
         if (benchDiff < squatDiff && benchDiff < deadliftDiff) {
-            worstLift = 2;
-        } else if (squatDiff < benchDiff && squatDiff < deadliftDiff) {
             worstLift = 1;
+        } else if (squatDiff < benchDiff && squatDiff < deadliftDiff) {
+            worstLift = 2;
         } else {
             worstLift = 3;
         }
