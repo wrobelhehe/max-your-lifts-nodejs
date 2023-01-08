@@ -166,22 +166,19 @@ router.post("/forgotPassword", (req, res) => {
           to: results[0].email,
           subject: "Password by MaxYourLifts",
           // html:
-          //   "<p><b>Your login details for MaxYourLifts</b><br><b>Email: </b>" +
-          //   results[0].email +
-          //   "<br><b>Password: </b>" +
-          //   results[0].password +
-          //   '<br><a href="http://localhost:4200/">Click here to login</a></p>',
+          // "<p><b>Your login details for MaxYourLifts</b><br><b>Email: </b>" +
+          // results[0].email +
+          // "<br><b>Password: </b>" +
+          // results[0].password +
+          // '<br><a href="http://localhost:4200/">Click here to login</a></p>',
           html:
             "<p>A password reset request has been made for your MaxYourLifts account. If you did not make this request, please ignore this email.</p>" +
-            "<p>To reset your password, please click the link below:</p>" +
-            "<p><a href='http://localhost:4200/reset-password?email=" +
-            user.email +
-            "'>Reset password</a></p>" +
-            "<p>If the link above does not work, you can also copy and paste the following URL into your browser:</p>" +
-            "<p>http://localhost:4200/reset-password?email=" +
-            user.email +
-            "</p>" +
-            "<p>Thank you,</p>" +
+            "<p>Your login details: <br><b>Email: </b>" +
+            results[0].email +
+            "<br><b>Password: </b>" +
+            results[0].password +
+            '<br><a href="http://localhost:4200/">Click here to login</a></p>' +
+
             "<p>The MaxYourLifts team</p>",
         };
         transporter.sendMail(mailOptions, function (error, info) {

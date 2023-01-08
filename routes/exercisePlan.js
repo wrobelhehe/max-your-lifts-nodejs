@@ -359,6 +359,25 @@ router.delete("/deletePlan/:id", auth.authenticateToken, (req, res) => {
   });
 });
 
+// router.get("/getPlans", auth.authenticateToken, (req, res) => {
+//   const userId = res.locals.userId
+//   const sql = `SELECT p.id AS plan_id, p.name AS plan_name, p.description AS plan_description, pi.squat, pi.bench, pi.deadlift
+//   FROM plans p
+//   INNER JOIN plan_info pi ON p.id = pi.plan_id
+//   WHERE p.user_id = ?`;
+//   connection.query(sql, [userId], (error, rows) => {
+//     if (error) {
+//       console.error(error);
+//       res.status(500).json({ message: "Internal server error" });
+//       return;
+//     }
+//     if (rows.length === 0) {
+//       res.status(404).json({ message: "No plans found for this user" });
+//       return;
+//     }
+//     res.json(rows);
+//   });
+// });
 router.get("/getPlans", auth.authenticateToken, (req, res) => {
   const userId = res.locals.userId
   const sql = `SELECT p.id AS plan_id, p.name AS plan_name, p.description AS plan_description, pi.squat, pi.bench, pi.deadlift
@@ -372,7 +391,7 @@ router.get("/getPlans", auth.authenticateToken, (req, res) => {
       return;
     }
     if (rows.length === 0) {
-      res.status(404).json({ message: "No plans found for this user" });
+      res.status(200).json([]);
       return;
     }
     res.json(rows);

@@ -148,62 +148,48 @@ router.patch("/update", auth.authenticateToken, checkRole.checkRole, (req, res, 
 
 
 
-// router.delete("/delete/:id", auth.authenticateToken, (req, res, next) => {
-//   const exerciseId = req.params.id;
-//   const deleteCategoriesQuery = "DELETE FROM exercise_categories WHERE exercise_id = ?";
-//   const deleteDetailsQuery = "DELETE FROM exercise_details WHERE exercise_id = ?";
-//   const deleteExerciseQuery = "DELETE FROM exercises WHERE id = ?";
 
-//   connection.query(deleteCategoriesQuery, [exerciseId], (error, results) => {
-//     if (error) return res.status(500).json(error);
-//     console.log(`Successfully deleted categories for exercise with ID ${exerciseId} from the database`);
-
-//     connection.query(deleteDetailsQuery, [exerciseId], (error, results) => {
-//       if (error) return res.status(500).json(error);
-//       console.log(`Successfully deleted details for exercise with ID ${exerciseId} from the database`);
-
-//       connection.query(deleteExerciseQuery, [exerciseId], (error, results) => {
-//         if (error) return res.status(500).json(error);
-//         console.log(`Successfully deleted exercise with ID ${exerciseId} from the database`);
-//         return res.status(200).json({ message: "Successfully deleted exercise and related rows" });
-//       });
-//     });
-//   });
-// });
 router.delete("/delete/:id", auth.authenticateToken, (req, res, next) => {
   const exerciseId = req.params.id;
+  console.log(exerciseId)
+  const deleteWorkoutExercisesQuery = "DELETE FROM workout_exercises WHERE exercise_id = ?";
   const deleteCategoriesQuery = "DELETE FROM exercise_categories WHERE exercise_id = ?";
   const deleteDetailsQuery = "DELETE FROM exercise_details WHERE exercise_id = ?";
   const deleteExerciseQuery = "DELETE FROM exercises WHERE id = ?";
 
-  connection.query(deleteCategoriesQuery, [exerciseId], (error, results) => {
+  connection.query(deleteWorkoutExercisesQuery, [exerciseId], (error, results) => {
     if (error) return res.status(500).json(error);
-    console.log(`Successfully deleted categories for exercise with ID ${exerciseId} from the database`);
+    console.log(`Successfully deleted rows from workout_exercises for exercise with ID ${exerciseId}`);
 
-    connection.query(deleteDetailsQuery, [exerciseId], (error, results) => {
+    connection.query(deleteCategoriesQuery, [exerciseId], (error, results) => {
       if (error) return res.status(500).json(error);
-      console.log(`Successfully deleted details for exercise with ID ${exerciseId} from the database`);
+      console.log(`Successfully deleted categories for exercise with ID ${exerciseId} from the database`);
 
-      connection.query(deleteExerciseQuery, [exerciseId], (error, results) => {
+      connection.query(deleteDetailsQuery, [exerciseId], (error, results) => {
         if (error) return res.status(500).json(error);
-        console.log(`Successfully deleted exercise with ID ${exerciseId} from the database`);
+        console.log(`Successfully deleted details for exercise with ID ${exerciseId} from the database`);
 
-        // Reset the autoincrement value in the exercise table to the last index
-        connection.query("SELECT MAX(id) as max_id FROM exercises", (error, results) => {
+        connection.query(deleteExerciseQuery, [exerciseId], (error, results) => {
           if (error) return res.status(500).json(error);
-          const maxId = results[0].max_id;
-          connection.query(`ALTER TABLE exercises AUTO_INCREMENT = ${maxId + 1}`, (error, results) => {
-            if (error) return res.status(500).json(error);
-            console.log(`Successfully reset the autoincrement value in the exercise table to ${maxId + 1}`);
+          console.log(`Successfully deleted exercise with ID ${exerciseId} from the database`);
 
-            // Reset the autoincrement value in the exercise_details table to the last index
-            connection.query("SELECT MAX(id) as max_id FROM exercise_details", (error, results) => {
+          // Reset the autoincrement value in the exercise table to the last index
+          connection.query("SELECT MAX(id) as max_id FROM exercises", (error, results) => {
+            if (error) return res.status(500).json(error);
+            const maxId = results[0].max_id;
+            connection.query(`ALTER TABLE exercises AUTO_INCREMENT = ${maxId + 1}`, (error, results) => {
               if (error) return res.status(500).json(error);
-              const maxId = results[0].max_id;
-              connection.query(`ALTER TABLE exercise_details AUTO_INCREMENT = ${maxId + 1}`, (error, results) => {
+              console.log(`Successfully reset the autoincrement value in the exercise table to ${maxId + 1}`);
+
+              // Reset the autoincrement value in the exercise_details table to the last index
+              connection.query("SELECT MAX(id) as max_id FROM exercise_details", (error, results) => {
                 if (error) return res.status(500).json(error);
-                console.log(`Successfully reset the autoincrement value in the exercise_details table to ${maxId + 1}`);
-                return res.status(200).json({ message: "Successfully deleted exercise and related rows" });
+                const maxId = results[0].max_id;
+                connection.query(`ALTER TABLE exercise_details AUTO_INCREMENT = ${maxId + 1}`, (error, results) => {
+                  if (error) return res.status(500).json(error);
+                  console.log(`Successfully reset the autoincrement value in the exercise_details table table to ${maxId + 1}`);
+                  return res.status(200).json({ message: "Successfully deleted exercise and related rows" });
+                });
               });
             });
           });
