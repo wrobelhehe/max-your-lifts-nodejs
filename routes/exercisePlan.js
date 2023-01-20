@@ -8,62 +8,6 @@ let path = require("path");
 var fs = require("fs");
 var uuid = require("uuid");
 
-// router.get("/generatePlan/:planId", auth.authenticateToken, (req, res) => {
-//   const sql = `SELECT p.name AS plan_name, p.description AS plan_description, pi.sex, pi.age, pi.equipment, pi.weight, pi.squat, pi.bench, pi.deadlift, pi.tested, w.name AS workout_name, w.description AS workout_description, e.id, e.name, e.description, e.video_url, e.status
-//   FROM plans p
-//   INNER JOIN plan_info pi ON p.id = pi.plan_id
-//   INNER JOIN workouts w ON p.id = w.plan_id
-//   INNER JOIN workout_exercises we ON w.id = we.workout_id
-//   INNER JOIN exercises e ON we.exercise_id = e.id
-//   WHERE p.user_id = ? AND p.id = ?`;
-//   const userId = res.locals.userId;
-//   const planId = req.params.planId;
-
-//   connection.query(sql, [userId, planId], (error, rows) => {
-//     if (error) {
-//       console.error(error);
-//       res.status(500).json({ message: "Internal server error" });
-//       return;
-//     }
-//     if (rows.length === 0) {
-//       res.status(404).json({ message: "Plan not found" });
-//       return;
-//     }
-//     const output = {
-//       plan_name: rows[0].plan_name,
-//       plan_description: rows[0].plan_description,
-//       sex: rows[0].sex,
-//       age: rows[0].age,
-//       equipment: rows[0].equipment,
-//       weight: rows[0].weight,
-//       squat: rows[0].squat,
-//       bench: rows[0].bench,
-//       deadlift: rows[0].deadlift,
-//       tested: rows[0].tested,
-//       workouts: []
-//     };
-//     const workouts = {};
-//     rows.forEach(row => {
-//       if (!workouts[row.workout_name]) {
-//         workouts[row.workout_name] = {
-//           workout_name: row.workout_name,
-//           workout_description: row.workout_description,
-//           exercises: []
-//         };
-//       }
-//       workouts[row.workout_name].exercises.push({
-//         id: row.id,
-//         name: row.name,
-//         description: row.description,
-//         video_url: row.video_url,
-//         status: row.status
-//       });
-//     });
-//     output.workouts = Object.values(workouts);
-//     res.json(output);
-//   });
-// })
-
 
 router.get("/generatePlan/:planId", auth.authenticateToken, (req, res) => {
   const sql = `SELECT p.name AS plan_name, p.description AS plan_description, pi.sex, pi.age, pi.equipment, pi.weight, pi.squat, pi.bench, pi.deadlift, pi.tested, w.name AS workout_name, w.description AS workout_description, e.id, e.name, e.description, e.video_url, e.status, ed.sets, ed.reps, ed.rpe, ed.tempo
@@ -359,25 +303,6 @@ router.delete("/deletePlan/:id", auth.authenticateToken, (req, res) => {
   });
 });
 
-// router.get("/getPlans", auth.authenticateToken, (req, res) => {
-//   const userId = res.locals.userId
-//   const sql = `SELECT p.id AS plan_id, p.name AS plan_name, p.description AS plan_description, pi.squat, pi.bench, pi.deadlift
-//   FROM plans p
-//   INNER JOIN plan_info pi ON p.id = pi.plan_id
-//   WHERE p.user_id = ?`;
-//   connection.query(sql, [userId], (error, rows) => {
-//     if (error) {
-//       console.error(error);
-//       res.status(500).json({ message: "Internal server error" });
-//       return;
-//     }
-//     if (rows.length === 0) {
-//       res.status(404).json({ message: "No plans found for this user" });
-//       return;
-//     }
-//     res.json(rows);
-//   });
-// });
 router.get("/getPlans", auth.authenticateToken, (req, res) => {
   const userId = res.locals.userId
   const sql = `SELECT p.id AS plan_id, p.name AS plan_name, p.description AS plan_description, pi.squat, pi.bench, pi.deadlift
